@@ -27,10 +27,24 @@ Install the helm chart, setting the URL of your FHIR server.
 
 **Important:**
 - The FHIR server URL needs to be reachable from your browser, i.e. from your computer
-- The FHIR server needs to be unauthenticated. There is a FHIR Proxy Chart that can remove the authentication of an IBM FHIR server. If running this Chart along the [Alvearie Health Patterns](https://github.com/Alvearie/health-patterns/tree/main/clinical-ingestion/helm-charts/alvearie-ingestion) chart the proxy is included there.
+- The FHIR server needs to be unauthenticated. There is a FHIR Proxy Chart that can remove the authentication of an IBM FHIR server. 
+- In order to expose the FHIR server, an ingress can be created by including ingress.class and ingress.host values.
 
 ```bash
-helm install fhir-ui . --set fhirServer=http://my-fhir-server/fhir-server/api/v4
+helm install fhir-ui . --set fhirServer=http://my-fhir-server/fhir-server/api/v4 --set ingress.class=<<INGRESS_CLASS>> --set ingress.host=<<INGRESS_HOST>>
+```
+
+INGRESS_CLASS refers to the ingress class used by your cloud provider.  Currently, these are the preferred values: 
+  - IBM: public-iks-k8s-nginx
+  - Azure: addon-http-application-routing
+  - AWS: nginx
+
+INGRESS_HOST refers to the pre-determined domain name that will be used to access your FHIR Patient Browser instance.
+
+If running this Chart along with the [Alvearie Health Patterns](https://github.com/Alvearie/health-patterns/tree/main/clinical-ingestion/helm-charts/alvearie-ingestion) chart, the proxy is included there.  To prevent unauthorized access to the FHIR server, this proxy will not be exposed outside of the cluster, but it can be referenced using the internal service name.
+
+```bash
+helm install fhir-ui . --set fhirServer=https://ingestion-fhir:81/fhir-server/api/v4 --set ingress.class=<<INGRESS_CLASS>> --set ingress.host=<<INGRESS_HOST>>
 ```
 
 ### Using the Chart
