@@ -5,9 +5,10 @@
 replicaCount: 1
 
 image:
-  repository: alvearie/patient-browser
+  # repository: alvearie/patient-browser
+  repository: pmcbride1234/patient-browser1
   pullPolicy: Always
-  tag: 0.0.2
+  tag: 0.0.5
 
 # The user should pass in the URL of their FHIR Server, the UI won't work with this default FHIR server URL
 fhirServer: http://your-fhir-server/fhir-server/api/v4/
