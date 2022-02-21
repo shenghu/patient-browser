@@ -1,0 +1,91 @@
+# Default values for fhir.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: alvearie/patient-browser
+  pullPolicy: Always
+  tag: 0.0.3
+
+# The user should pass in the URL of their FHIR Server, the UI won't work with this default FHIR server URL
+fhirServer: https://alvearie-fhir.apps.fhir-demo.cp.fyre.ibm.com/fhir-server/api/v4/
+
+service:
+  type: ClusterIP
+  httpPort: 80
+
+enabled: true
+
+ingress:
+  enabled: true
+  class: openshift-default
+  hostname: alvearie-fhir-ui.apps.fhir-demo.cp.fyre.ibm.com
+  annotations: {
+      #nginx.ingress.kubernetes.io/server-snippet: add_header Strict-Transport-Security "max-age=86400; includeSubDomains";,
+      #nginx.ingress.kubernetes.io/backend-protocol: HTTPS,
+      #nginx.ingress.kubernetes.io/proxy-ssl-protocols: TLSv1.2 TLSv1.3,
+      #nginx.ingress.kubernetes.io/proxy-ssl-verify: "true",
+      nginx.ingress.kubernetes.io/use-regex: 'true',
+      route.openshift.io/termination: "passthrough"
+      }
+
+  rules:
+    - host: *hostnameFhir
+      paths:
+        - path: ''
+          pathType: ImplementationSpecific
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+initContainers:
+  # fhir-init:  # <- will be used as container name
+  #  image: "busybox:1.30.1"
+  #  imagePullPolicy: "IfNotPresent"
+  #  command: ['sh', '-c', 'echo this is an initContainer']
+  #    volumeMounts:
+  #    - mountPath: /tmp/foo
+  #      name: foo
+
+extraVolumeMounts: []
+
+extraVolumes: []
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+env: []
+# Example:
+# - name: FHIR_TRANSACTION_MANAGER_TIMEOUT
+#   value: '300s'
