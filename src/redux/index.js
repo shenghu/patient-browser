@@ -10,6 +10,7 @@ import selection from "./selection"
 import query     from "./query"
 import settings  from "./settings"
 import urlParams from "./urlParams"
+import user from "./user"
 
 const middleWares = [thunk]
 
@@ -39,7 +40,8 @@ export default createStore(
         selection,
         query,
         settings,
-        urlParams
+        urlParams,
+        user
     }),
     applyMiddleware(...middleWares)
 );

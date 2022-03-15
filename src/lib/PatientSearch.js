@@ -2,6 +2,7 @@ import moment from "moment"
 import { CODE_SYSTEMS } from "./constants"
 import { parseQueryString, request } from "."
 import { intVal, getPath } from "."
+import { useKeycloak } from '@react-keycloak/web'
 
 /**
  * This is just a helper class that is used as a query builder. It has some
@@ -9,8 +10,7 @@ import { intVal, getPath } from "."
  * compile those into a query string that can be passed to the Patient endpoint
  * of a fhir api server.
  */
-export default class PatientSearch
-{
+export default class PatientSearch {
     /**
      * The constructor just creates an empty instance. Use the setter methods
      * to set query params and then call compile to build the query string.
@@ -145,7 +145,7 @@ export default class PatientSearch
         else {
             this.params[name] = value
         }
-        this.offset  = null;
+        this.offset = null;
         this.cacheId = null;
         return this
     }
@@ -232,7 +232,7 @@ export default class PatientSearch
     }
 
     setTags(tags) {
-        this.tags = [ ...tags ]
+        this.tags = [...tags]
         this.schedule({
             offset: null,
             cacheId: null
@@ -249,7 +249,7 @@ export default class PatientSearch
      * @returns {PatientSearch} Returns the instance
      */
     setMinAge(age) {
-        this.minAge  = age;
+        this.minAge = age;
         this.schedule({
             offset: null,
             cacheId: null
@@ -266,7 +266,7 @@ export default class PatientSearch
      * @returns {PatientSearch} Returns the instance
      */
     setMaxAge(age) {
-        this.maxAge  = age;
+        this.maxAge = age;
         this.schedule({
             offset: null,
             cacheId: null
@@ -289,36 +289,36 @@ export default class PatientSearch
 
         switch (group) {
 
-        // infant - 0 to 12 months
-        case "infant":
-            this.setMinAge(null);
-            this.setMaxAge({ value: 1, units: "years" });
-            break;
+            // infant - 0 to 12 months
+            case "infant":
+                this.setMinAge(null);
+                this.setMaxAge({ value: 1, units: "years" });
+                break;
 
-        // child - 1 to 18 years
-        case "child":
-            this.setMinAge({ value: 1 , units: "years" });
-            this.setMaxAge({ value: 18, units: "years" });
-            break;
+            // child - 1 to 18 years
+            case "child":
+                this.setMinAge({ value: 1, units: "years" });
+                this.setMaxAge({ value: 18, units: "years" });
+                break;
 
-        // adult - 18 to 65 years
-        case "adult":
-            this.setMinAge({ value: 18, units: "years" });
-            this.setMaxAge({ value: 65, units: "years" });
-            break;
+            // adult - 18 to 65 years
+            case "adult":
+                this.setMinAge({ value: 18, units: "years" });
+                this.setMaxAge({ value: 65, units: "years" });
+                break;
 
-        // Elderly - 65+
-        case "elderly":
-            this.setMinAge({ value: 65, units: "years" });
-            this.setMaxAge(null);
-            break;
+            // Elderly - 65+
+            case "elderly":
+                this.setMinAge({ value: 65, units: "years" });
+                this.setMaxAge(null);
+                break;
 
-        // Anything else clears the birthdate param
-        default:
-            this.setMinAge(null);
-            this.setMaxAge(null);
-            // this.ageGroup = null;
-            break;
+            // Anything else clears the birthdate param
+            default:
+                this.setMinAge(null);
+                this.setMaxAge(null);
+                // this.ageGroup = null;
+                break;
         }
         return this;
     }
@@ -331,9 +331,9 @@ export default class PatientSearch
      */
     setGender(gender) {
         if (gender !== this.gender) {
-            this.gender  = gender;
+            this.gender = gender;
             this.schedule({
-                offset : null,
+                offset: null,
                 cacheId: null
             });
         }
@@ -377,7 +377,7 @@ export default class PatientSearch
     setPage(page) {
         this.page = intVal(page);
         if (this.page < 1) {
-        this.page = null;
+            this.page = null;
         }
         return this;
     }
@@ -404,7 +404,7 @@ export default class PatientSearch
 
         inst.conditions = { ...this.conditions };
         inst.params = { ...this.params };
-        inst.tags = [ ...this.tags ];
+        inst.tags = [...this.tags];
 
         inst.setSort(this.sort)
             .setAgeGroup(this.ageGroup)
@@ -425,20 +425,20 @@ export default class PatientSearch
      * @returns {PatientSearch} Returns the instance
      */
     reset() {
-        this.conditions   = {};
-        this.minAge       = null;
-        this.maxAge       = null;
-        this.gender       = null;
-        this.limit        = null;
-        this.offset       = null;
-        this.cacheId      = null;
-        this.ageGroup     = null;
-        this.page         = null;
-        this.params       = {};
-        this.queryString  = "";
-        this.queryType    = "default"
-        this.sort         = "";
-        this.tags         = [];
+        this.conditions = {};
+        this.minAge = null;
+        this.maxAge = null;
+        this.gender = null;
+        this.limit = null;
+        this.offset = null;
+        this.cacheId = null;
+        this.ageGroup = null;
+        this.page = null;
+        this.params = {};
+        this.queryString = "";
+        this.queryType = "default"
+        this.sort = "";
+        this.tags = [];
         return this;
     }
 
@@ -449,20 +449,20 @@ export default class PatientSearch
      */
     getState() {
         return {
-            conditions  : this.conditions,
-            minAge      : this.minAge,
-            maxAge      : this.maxAge,
-            gender      : this.gender,
-            limit       : this.limit,
-            offset      : this.offset,
-            cacheId     : this.cacheId,
-            page        : this.page,
-            ageGroup    : this.ageGroup,
-            params      : { ...this.params },
-            queryString : this.queryString,
-            queryType   : this.queryType,
-            sort        : this.sort,
-            tags        : [ ...this.tags ]
+            conditions: this.conditions,
+            minAge: this.minAge,
+            maxAge: this.maxAge,
+            gender: this.gender,
+            limit: this.limit,
+            offset: this.offset,
+            cacheId: this.cacheId,
+            page: this.page,
+            ageGroup: this.ageGroup,
+            params: { ...this.params },
+            queryString: this.queryString,
+            queryType: this.queryType,
+            sort: this.sort,
+            tags: [...this.tags]
         };
     }
 
@@ -471,7 +471,7 @@ export default class PatientSearch
      * endpoint.
      * @return {String} The compiled query string (without the "?" in front)
      */
-    compile(encode=true) {
+    compile(encode = true) {
         let params = [];
 
         [
@@ -516,7 +516,7 @@ export default class PatientSearch
             Object.keys(this.params).forEach(k => {
                 if (String(this.params[k]).trim()) {
                     params.push({
-                        name : k,
+                        name: k,
                         value: this.params[k]
                     });
                 }
@@ -527,13 +527,13 @@ export default class PatientSearch
                 String(this.sort).split(",").forEach(token => {
                     if (token.indexOf("-") === 0) {
                         params.push({
-                            name : "_sort:desc",
+                            name: "_sort:desc",
                             value: token.substring(1)
                         })
                     }
                     else {
                         params.push({
-                            name : "_sort:asc",
+                            name: "_sort:asc",
                             value: token
                         })
                     }
@@ -553,7 +553,7 @@ export default class PatientSearch
                         this.minAge.units
                     );
                     params.push({
-                        name : "birthdate",
+                        name: "birthdate",
                         value: "le" + d.format('YYYY-MM-DD')
                     });
                 }
@@ -565,7 +565,7 @@ export default class PatientSearch
                         this.maxAge.units
                     );
                     params.push({
-                        name : "birthdate",
+                        name: "birthdate",
                         value: "ge" + d.format('YYYY-MM-DD')
                     });
                 }
@@ -578,7 +578,7 @@ export default class PatientSearch
                     }
                     else {
                         params.push({
-                            name : "deceased",
+                            name: "deceased",
                             value: false
                         });
                     }
@@ -587,7 +587,7 @@ export default class PatientSearch
                 // Gender ------------------------------------------------------
                 if (this.gender) {
                     params.push({
-                        name : "gender",
+                        name: "gender",
                         value: this.gender
                     });
                 }
@@ -597,7 +597,7 @@ export default class PatientSearch
         // limit ---------------------------------------------------------------
         if (this.limit) {
             params.push({
-                name : "_count",
+                name: "_count",
                 value: this.limit
             });
         }
@@ -608,7 +608,7 @@ export default class PatientSearch
                 name: "_getpages",
                 value: this.cacheId
             }, {
-                name : "_getpagesoffset",
+                name: "_getpagesoffset",
                 value: this.offset
             });
         }
@@ -737,6 +737,14 @@ export default class PatientSearch
             return Promise.resolve([]);
         }
 
+        let headers = {}
+        if (server.tokens && server.tokens.token) {
+            headers = {
+                "Authorization": `Bearer ${server.tokens.token}`,
+                "X-APP-ID": "patient-browser"
+            }
+        }
+
         /**
          * The keys (eg: "http://snomed.info/sct|44054006") that were set by the
          * user.
@@ -766,7 +774,7 @@ export default class PatientSearch
             if (response.entry) {
                 response.entry.forEach(condition => {
                     let patientID = server.type == "DSTU-2" ?
-                        condition.resource.patient.reference.split("/").pop():
+                        condition.resource.patient.reference.split("/").pop() :
                         condition.resource.subject.reference.split("/").pop();
                     if (!patientIDs[patientID]) {
                         patientIDs[patientID] = [];
@@ -779,7 +787,7 @@ export default class PatientSearch
 
                 let nextLink = (response.link || []).find(l => l.relation == "next");
                 if (nextLink) {
-                    return request({ url: nextLink.url }).then(handleConditionsResponse);
+                    return request({ url: nextLink.url, headers }).then(handleConditionsResponse);
                 }
             }
             // console.log(conditionKeys, patientIDs)
@@ -811,17 +819,18 @@ export default class PatientSearch
 
         // Tags (not currently available in STU2)
         if (this.tags.length) {
-            params.push( "_tag=" + encodeURIComponent(this.tags.join(",")) );
+            params.push("_tag=" + encodeURIComponent(this.tags.join(",")));
         }
 
         return request({
-            url: `${server.url}/Condition?${params.join("&")}`
+            url: `${server.url}/Condition?${params.join("&")}`,
+            headers
         })
-        .then(handleConditionsResponse)
-        .then(ids => {
-            this.__cache__.patientIDs = ids;
-            return ids;
-        });
+            .then(handleConditionsResponse)
+            .then(ids => {
+                this.__cache__.patientIDs = ids;
+                return ids;
+            });
     }
 
     /**
@@ -852,26 +861,34 @@ export default class PatientSearch
             }
         };
 
+        if (server.tokens && server.tokens.token) {
+            options.headers = {
+                ...options.headers,
+                "Authorization": `Bearer ${server.tokens.token}`,
+                "X-APP-ID": "patient-browser"
+            }
+        }
+
         return this.getPatientIDs(server)
-        .then(ids => {
-            if (ids.length) {
-                // if IDs were found - add them to the patient query
-                options.data = [
-                    options.data,
-                    "_id=" + encodeURIComponent(ids.join(","))
-                ].filter(Boolean).join("&");
-            }
-            else {
-                // If conditions were specified but no patients were found to
-                // have those conditions, then we should exit early.
-                if (this.hasConditions()) {
-                    return Promise.reject(
-                        "No patients found with the specified conditions!"
-                    );
+            .then(ids => {
+                if (ids.length) {
+                    // if IDs were found - add them to the patient query
+                    options.data = [
+                        options.data,
+                        "_id=" + encodeURIComponent(ids.join(","))
+                    ].filter(Boolean).join("&");
                 }
-            }
-            return options;
-        })
-        .then(request);
+                else {
+                    // If conditions were specified but no patients were found to
+                    // have those conditions, then we should exit early.
+                    if (this.hasConditions()) {
+                        return Promise.reject(
+                            "No patients found with the specified conditions!"
+                        );
+                    }
+                }
+                return options;
+            })
+            .then(request);
     }
 }

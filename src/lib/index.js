@@ -665,24 +665,28 @@ export function getBundleURL(bundle, rel) {
 }
 
 export function request(options) {
-  options = typeof options == "string" ? { url: options } : options || {};
-  let cfg = $.extend(true, options, {
-    headers: {
-      Accept: "application/fhir+json",
-    },
-  });
+      options = typeof options == "string" ? { url: options } : options || {};
 
-  return new Promise((resolve, reject) => {
-    // console.info("Requesting " + decodeURIComponent(cfg.url))
-    $.ajax(cfg).then(resolve, (xhr) => {
-      let message = getErrorMessage(xhr);
-      if (message && typeof message == "string") {
-        return reject(new Error(message));
-      } else {
-        return reject({ message });
-      }
-    });
-  });
+    
+      return new Promise((resolve, reject) => {
+        let headers = {
+          Accept: "application/fhir+json"
+        };
+
+        let cfg = $.extend(true, options, {
+          headers
+        });
+
+        // console.info("Requesting " + decodeURIComponent(cfg.url))
+        $.ajax(cfg).then(resolve, (xhr) => {
+          let message = getErrorMessage(xhr);
+          if (message && typeof message == "string") {
+            return reject(new Error(message));
+          } else {
+            return reject({ message });
+          }
+        });
+      });
 }
 
 export function getAllPages(options, result = []) {

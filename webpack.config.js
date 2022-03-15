@@ -1,14 +1,15 @@
 "use strict";
 
-const Path                 = require("path");
-const Webpack              = require("webpack");
-const Package              = require("./package.json");
+const Path = require("path");
+const Webpack = require("webpack");
+const Package = require("./package.json");
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
-const HtmlWebpackPlugin    = require('html-webpack-plugin');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
-const ENV  = process.env.NODE_ENV || "production";
-const SRC  = Path.join(__dirname, "src");
-const DST  = Path.join(__dirname, "build");
+const ENV = process.env.NODE_ENV || "production";
+const SRC = Path.join(__dirname, "src");
+const DST = Path.join(__dirname, "build");
 const PORT = process.env.PORT || 9001;
 const HOST = process.env.HOST || "0.0.0.0";
 
@@ -17,7 +18,7 @@ let config = {
     context: SRC,
 
     entry: {
-        index : [
+        index: [
             Path.join(SRC, "index.js")
         ],
         "vendor": [
@@ -31,24 +32,25 @@ let config = {
             "react-router",
             "react-router-dom",
             "history",
-            "moment"
+            "moment",
+            "keycloak-js"
         ]
     },
 
     output: {
-        filename  : "[name].js",
-        path      : `${DST}/js/`,
-        publicPath: "/js/",
-        sourceMapFilename: "[file].[hash].map"
+        filename: "js/[name].[fullhash].js",
+        path: DST,
+        publicPath: "",
+        sourceMapFilename: "[file].[fullhash].map"
     },
-
+    target: 'web',
     module: {
         rules: [
             {
-                test   : /\.less$/,
-                include: [ SRC ],
-                use: [
-                    "style-loader?singleton",
+                test: /\.less$/,
+                include: [SRC],
+                use: [     MiniCssExtractPlugin.loader,
+            
                     "css-loader",
                     "postcss-loader",
                     "less-loader"
@@ -66,132 +68,145 @@ let config = {
     //     "react-dom": "ReactDOM"
     // },
 
-    resolve : {
-        extensions : [ ".js", ".jsx", ".less" ]
+    resolve: {
+        extensions: [".js", ".jsx", ".less"]
     },
 
-    devtool: "#source-map",
+    devtool: "source-map",
 
-    stats: {
-        colors      : true,
-        modules     : true,
-        reasons     : true,
-        errorDetails: true
+    // stats: {
+    //     colors      : true,
+    //     modules     : true,
+    //     reasons     : true,
+    //     errorDetails: true
+    // },
+
+
+    optimization: {
+        splitChunks: {
+            cacheGroups: {
+                commons: {
+                    name: 'commons',
+                    chunks: 'initial',
+                    enforce: true,
+                },
+            }
+        },
     },
 
-    plugins : [
+    plugins: [
         new Webpack.DefinePlugin({
-            "process.env.NODE_ENV": "'" + ENV + "'",
-            "__APP_VERSION__" : "'" + Package.version + "'"
-        }),
-        new Webpack.optimize.CommonsChunkPlugin({
-            name     : "vendor",
-            filename : "commons.js",
-            minChunks: 2
+            "process.env.NODE_ENV": "\"" + ENV + "\"",
+            "__APP_VERSION__": "'" + Package.version + "'"
         }),
         new HtmlWebpackPlugin({
             filename: DST + "/index.html",
             template: SRC + "/index.ejs",
-            inject  : false,
-            Webpack
-        })
+            inject: 'body',
+        }),
+        new MiniCssExtractPlugin({ filename: ENV == "development" ? '[name].css' : '[name].[fullhash].css',
+        chunkFilename: ENV == "development" ? '[id].css' : '[id].[fullhash].css',})
     ]
 }
 
 if (ENV == "development") {
     config.devServer = {
-        contentBase       : DST,
         historyApiFallback: true,
-        hot               : true,
+        hot: true,
+
+        // contentBase       : DST,
         // inline            : true,
-        quiet             : false,
-        noInfo            : false,
-        clientLogLevel    : "warning",
-        publicPath: `http://${HOST}:${PORT}/js/`,
-        // publicPath: "/js/",
+        //   quiet             : false,
+        //   noInfo            : false,
+        //  clientLogLevel    : "warning",
+        proxy: [
+            {
+                context: ['/auth/**'],
+                target: 'https://alvearie-keycloak.apps.fhir-demo.cp.fyre.ibm.com',
+                secure: false,
+                changeOrigin: true
+            },
+            {
+                context: ['/fhir-server/**'],
+                target: 'https://alvearie-fhir.apps.fhir-demo.cp.fyre.ibm.com',
+                secure: false,
+                changeOrigin: true
+            }
+        ],
 
-        // Display only errors to reduce the amount of output.
-        stats: {
-
-            // Add asset Information
-            assets: true,
-            // Sort assets by a field
-            assetsSort: "field",
-            // Add information about cached (not built) modules
-            cached: true,
-            // Add children information
-            children: true,
-            // Add chunk information (setting this to `false` allows for a less verbose output)
-            chunks: true,
-            // Add built modules information to chunk information
-            chunkModules: false,
-            // Add the origins of chunks and chunk merging info
-            chunkOrigins: false,
-            // Sort the chunks by a field
-            chunksSort: "field",
-            // Context directory for request shortening
-            context: ".",
-            // `webpack --colors` equivalent
-            colors: true,
-            // Add errors
-            errors: true,
-            // Add details to errors (like resolving log)
-            errorDetails: true,
-            // Add the hash of the compilation
-            hash: true,
-            // Add built modules information
-            modules: false,
-            // Sort the modules by a field
-            modulesSort: "field",
-            // Add public path information
-            publicPath: true,
-            // Add information about the reasons why modules are included
-            reasons: true,
-            // Add the source code of modules
-            source: true,
-            // Add timing information
-            timings: true,
-            // Add webpack version information
-            version: true,
-            // Add warnings
-            warnings: true
-        },
-        watchOptions: {
-            ignored: /node_modules/
-        },
         host: HOST,
-        port: PORT
+        port: PORT,
+        static: ['build'],
+        devMiddleware: {
+            writeToDisk: true,
+            index: false,
+            //contentBase       : DST,
+            //publicPath: `http://${HOST}:${PORT}/js/`,
+
+            // // Display only errors to reduce the amount of output.
+            stats: {
+                // Add asset Information
+                assets: true,
+                // Sort assets by a field
+                assetsSort: "field",
+                // Add information about cached (not built) modules
+                cached: true,
+                // Add children information
+                children: true,
+                // Add chunk information (setting this to `false` allows for a less verbose output)
+                chunks: true,
+                // Add built modules information to chunk information
+                chunkModules: false,
+                // Add the origins of chunks and chunk merging info
+                chunkOrigins: false,
+                // Sort the chunks by a field
+                chunksSort: "field",
+                // Context directory for request shortening
+                context: ".",
+                // `webpack --colors` equivalent
+                colors: true,
+                // Add errors
+                errors: true,
+                // Add details to errors (like resolving log)
+                errorDetails: true,
+                // Add the hash of the compilation
+                hash: true,
+                // Add built modules information
+                modules: false,
+                // Sort the modules by a field
+                modulesSort: "field",
+                // Add public path information
+                publicPath: true,
+                // Add information about the reasons why modules are included
+                reasons: true,
+                // Add the source code of modules
+                source: true,
+                // Add timing information
+                timings: true,
+                // Add webpack version information
+                version: true,
+                // Add warnings
+                warnings: true
+            },
+        }
     };
 
     config.module.rules.push({
-        test   : /\.jsx?$/,
-        include: [ SRC ],
+        test: /\.js?$/,
+        include: [SRC],
         // exclude: [/node_modules/],
-        use    : [ "react-hot-loader", "babel-loader" ]
+        use: ["react-hot-loader/webpack", "babel-loader"]
     });
-
-    config.plugins.push(
-        new Webpack.HotModuleReplacementPlugin(),
-
-        // prints more readable module names in the browser console
-        // on HMR updates
-        new Webpack.NamedModulesPlugin()
-    );
 
     config.entry.index = [
         "webpack-dev-server/client?http://localhost:" + PORT,
         "webpack/hot/only-dev-server", // "only" prevents reload on syntax errors
-        "./index.js"
+        Path.join(SRC, "index.js")
     ];
-
-    config.output.publicPath = "http://localhost:" + PORT + "/js/";
 }
 
 else if (ENV == "production") {
     config.plugins.push(
-        new Webpack.optimize.UglifyJsPlugin({
-            sourceMap: true
-        }),
         new BundleAnalyzerPlugin({
             analyzerMode: "static",
             openAnalyzer: false
@@ -199,9 +214,9 @@ else if (ENV == "production") {
     );
 
     config.module.rules.push({
-        test   : /\.jsx?$/,
-        include: [ SRC ],
-        use    : [ "babel-loader" ]
+        test: /\.js?$/,
+        include: [SRC],
+        use: ["babel-loader"]
     });
 }
 

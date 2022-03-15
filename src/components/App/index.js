@@ -13,8 +13,6 @@ import                    "./App.less"
 const OWNER = window.opener || (window.parent === self ? null : window.parent);
 const DEFAULT_CONFIG = "default";
 
-
-
 export class App extends React.Component
 {
     static propTypes = {
@@ -59,7 +57,6 @@ export class App extends React.Component
     }
 
     componentDidMount() {
-
         this.handleUiBlocking();
 
         let { config, ...params } = parseQueryString(window.location.search);
@@ -79,6 +76,7 @@ export class App extends React.Component
                 console.warn("Loading custom config: " + errorXHR.statusText);
             }
         ).always(() => {
+     
             let settingReceived = false;
 
             const onMessage = e => {
@@ -88,7 +86,8 @@ export class App extends React.Component
                 {
                     settingReceived = true;
                     this.props.dispatch(merge(e.data.data));
-                    this.props.dispatch(fetch());
+                    if (!settings["auth-server-url"] || settings.server.tokens) 
+                      this.props.dispatch(fetch());
                 }
             };
 
@@ -102,23 +101,24 @@ export class App extends React.Component
                 });
 
                 window.addEventListener("message", onMessage);
-
                 setTimeout(() => {
                     window.removeEventListener("message", onMessage);
                     if (!settingReceived) {
-                        this.props.dispatch(fetch());
+                        if (!settings["auth-server-url"] || settings.server.tokens) 
+                          this.props.dispatch(fetch());
                     }
                 }, 1000);
 
                 OWNER.postMessage({ type: "ready" }, "*");
             }
             else {
-                this.props.dispatch(fetch());
+                if (!settings["auth-server-url"] || settings.server.tokens) 
+                  this.props.dispatch(fetch());
             }
         })
     }
 
-    render() {
+    render() {        
         if (this.state.error) {
             return <ErrorMessage error={this.state.error}/>
         }

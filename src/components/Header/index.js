@@ -1,4 +1,3 @@
-
 import React     from "react"
 import PropTypes from "prop-types"
 import            "./Header.less"
@@ -19,26 +18,24 @@ import store       from "../../redux"
 import TagSelector from "../TagSelector"
 import AgeSelector from "../AgeSelector"
 import SortWidget  from "../SortWidget"
+import Dropdown from 'react-bootstrap/Dropdown'
+import ButtonGroup from 'react-bootstrap/ButtonGroup'
+import { useKeycloak } from "@react-keycloak/web";
+
 import {
     parseQueryString,
     setHashParam
 } from "../../lib"
+import { useSelector } from "react-redux"
 
-export default class Header extends React.Component
+export const Header = (props)=>
 {
-    static propTypes = {
-        settings : PropTypes.object.isRequired,
-        query    : PropTypes.object.isRequired,
-        location : PropTypes.object.isRequired,
-        urlParams: PropTypes.object.isRequired
-    };
-
-    fetch(delay=500) {
-        if (this.props.settings.submitStrategy == "automatic") {
-            if (this.fetchDelay) {
-                clearTimeout(this.fetchDelay);
+    const dispatchFetch = (delay=500) => {
+        if (props.settings.submitStrategy == "automatic") {
+            if (fetchDelay) {
+                clearTimeout(fetchDelay);
             }
-            this.fetchDelay = setTimeout(() => {
+            fetchDelay = setTimeout(() => {
                 store.dispatch(fetch())
             }, delay)
         }
@@ -47,7 +44,25 @@ export default class Header extends React.Component
         // }
     }
 
-    renderAdvancedTabContents() {
+    const renderUserMenu = ()=>{
+        const { keycloak } = useKeycloak();
+
+    const user = useSelector((store) => store.user)
+        
+        return (
+            <>
+            <Dropdown className="pull-right advanced-label" as={ButtonGroup}>
+                <Dropdown.Toggle id="user">{keycloak.authenticated?keycloak.tokenParsed.preferred_username:"Not Login"}</Dropdown.Toggle>
+                <Dropdown.Menu className="user-menu" >
+                    {!!keycloak.authenticated && (<Dropdown.Item eventKey="1" onClick={() => keycloak.logout()}>Logout</Dropdown.Item>)}
+                    {!keycloak.authenticated && (<Dropdown.Item eventKey="1" onClick={() => keycloak.login()}>Login</Dropdown.Item>)}
+                </Dropdown.Menu>
+            </Dropdown>
+        </> 
+        )
+    }
+
+    const renderAdvancedTabContents = ()=>{
         return (
             <div className="form-group">
                 <p className="text-warning" style={{ padding: "0 5px 5px", margin: 0 }}>
@@ -67,7 +82,7 @@ export default class Header extends React.Component
                             placeholder="Patient Search Query String"
                             name="query"
                             onChange={ e => store.dispatch(setQueryString(e.target.value)) }
-                            value={ this.props.query.queryString }
+                            value={ props.query.queryString }
                         />
                         <span className="input-group-btn">
                             <button className="btn btn-warning" type="submit">Go</button>
@@ -78,14 +93,14 @@ export default class Header extends React.Component
         )
     }
 
-    renderDemographicsTabContents() {
+    const renderDemographicsTabContents = () => {
         return (
             <form onSubmit={ e => {
                 e.preventDefault()
                 store.dispatch(fetch())
             }}>
                 <div className="row">
-                    <div className={ "**custom**" === this.props.query.ageGroup ? "col-sm-6" : "col-sm-12" }>
+                    <div className={ "**custom**" === props.query.ageGroup ? "col-sm-6" : "col-sm-12" }>
                         <div className="form-group">
                             {/*<label>Name:</label>*/}
                             <div className="input-group">
@@ -94,13 +109,13 @@ export default class Header extends React.Component
                                     type="text"
                                     className="form-control input-sm"
                                     placeholder="Search by name..."
-                                    value={ this.props.query.params.name || "" }
+                                    value={ props.query.params.name || "" }
                                     onChange={e => {
                                         store.dispatch(setParam({
                                             name : "name",
                                             value: e.target.value
                                         }))
-                                        this.fetch()
+                                        dispatchFetch()
                                     }}
                                 />
                             </div>
@@ -113,9 +128,9 @@ export default class Header extends React.Component
                                 className="form-control input-sm"
                                 onChange={ e => {
                                     store.dispatch(setGender(e.target.value))
-                                    this.fetch()
+                                    dispatchFetch()
                                 }}
-                                value={ this.props.query.gender || "" }
+                                value={ props.query.gender || "" }
                             >
                                 <option value="male">Males</option>
                                 <option value="female">Females</option>
@@ -123,32 +138,32 @@ export default class Header extends React.Component
                             </select>
                         </div>
                     </div>
-                    <div className={ "**custom**" === this.props.query.ageGroup ? "col-sm-12" : "col-sm-6" }>
+                    <div className={ "**custom**" === props.query.ageGroup ? "col-sm-12" : "col-sm-6" }>
                         <div className="form-group">
                             {/*<label>Age:</label>*/}
                             <AgeSelector
-                                min={ this.props.query.minAge || { value: 0  , units: "years" } }
-                                max={ this.props.query.maxAge || { value: 100, units: "years" } }
+                                min={ props.query.minAge || { value: 0  , units: "years" } }
+                                max={ props.query.maxAge || { value: 100, units: "years" } }
                                 onMinChange={ age => {
                                     store.dispatch(setMinAge(age))
-                                    //if ("**custom**" != this.props.query.ageGroup) {
-                                    this.fetch()
+                                    //if ("**custom**" != props.query.ageGroup) {
+                                    dispatchFetch()
                                     //}
                                 }}
                                 onMaxChange={ age => {
                                     store.dispatch(setMaxAge(age))
-                                    //if ("**custom**" != this.props.query.ageGroup) {
-                                    this.fetch()
+                                    //if ("**custom**" != props.query.ageGroup) {
+                                    dispatchFetch()
                                     //}
                                 }}
                                 onGroupChange={ group => {
                                     store.dispatch(setAgeGroup(group))
-                                    //if ("**custom**" != this.props.query.ageGroup) {
-                                    this.fetch()
+                                    //if ("**custom**" != props.query.ageGroup) {
+                                    dispatchFetch()
                                     //}
                                 }}
-                                //update={ () => this.fetch() }
-                                group={ this.props.query.ageGroup }
+                                //update={ () => fetch() }
+                                group={ props.query.ageGroup }
                             />
                         </div>
                     </div>
@@ -157,15 +172,15 @@ export default class Header extends React.Component
         )
     }
 
-    renderConditionsTabContents() {
+    const renderConditionsTabContents = () => {
         return (
             <div className="row">
                 <div className="col-sm-12">
                     <div className="form-group">
                         <TagSelector
                             tags={
-                                Object.keys(this.props.settings.server.conditions).map(key => {
-                                    let condition = this.props.settings.server.conditions[key];
+                                Object.keys(props.settings.server.conditions).map(key => {
+                                    let condition = props.settings.server.conditions[key];
                                     return {
                                         key,
                                         label: condition.description,
@@ -180,11 +195,11 @@ export default class Header extends React.Component
                                         conditions[tag.key] = tag.data
                                     })
                                     store.dispatch(setConditions(conditions))
-                                    this.fetch()
+                                    dispatchFetch()
                                 }
                             }
                             label="condition code"
-                            selected={ Object.keys(this.props.query.conditions) }
+                            selected={ Object.keys(props.query.conditions) }
                         />
                     </div>
                 </div>
@@ -192,8 +207,8 @@ export default class Header extends React.Component
         )
     }
 
-    renderTagsTabContents() {
-        let selected = this.props.query.tags || this.props.settings.server.tags.filter(
+    const renderTagsTabContents = ()=> {
+        let selected = props.query.tags || props.settings.server.tags.filter(
             tag => !!tag.selected
         ).map(tag => !!tag.key);
         return (
@@ -201,13 +216,13 @@ export default class Header extends React.Component
                 <div className="col-sm-12">
                     <div className="form-group">
                         <TagSelector
-                            tags={ this.props.settings.server.tags }
+                            tags={ props.settings.server.tags }
                             selected={ selected }
                             onChange={
                                 sel => {
                                     let tags = Object.keys(sel).map(k => sel[k].key)
                                     store.dispatch(setTags(tags))
-                                    this.fetch()
+                                    dispatchFetch()
                                 }
                             }
                             label="tag"
@@ -218,16 +233,16 @@ export default class Header extends React.Component
         )
     }
 
-    render() {
-        let _query    = parseQueryString(this.props.location.search);
-        let _advanced = this.props.query.queryType == "advanced";
-        let conditionsCount   = Object.keys(this.props.query.conditions).length;
+   
+        let _query    = parseQueryString(props.location.search);
+        let _advanced = props.query.queryType == "advanced";
+        let conditionsCount   = Object.keys(props.query.conditions).length;
         let demographicsCount = 0;
-        let tagsCount         = Object.keys(this.props.query.tags).length;
+        let tagsCount         = Object.keys(props.query.tags).length;
 
         // Compute which the active tab should be
         let tabs = ["demographics", "conditions"];
-        if (!this.props.settings.hideTagSelector) {
+        if (!props.settings.hideTagSelector) {
             tabs.push("tags");
         }
         let _tab = _query._tab || "";
@@ -238,21 +253,22 @@ export default class Header extends React.Component
         // Manually increment the value for the demographics badge depending on
         // the state of the app
 
-        if (this.props.query.gender) {
+        if (props.query.gender) {
             demographicsCount += 1;
         }
 
-        if (this.props.query.params.name) {
+        if (props.query.params.name) {
             demographicsCount += 1;
         }
 
-        if (this.props.query.maxAge !== null || this.props.query.minAge !== null) {
+        if (props.query.maxAge !== null || props.query.minAge !== null) {
             demographicsCount += 1;
         }
 
         return (
             <div className="app-header">
                 <div style={{ flexDirection: "row" }}>
+         {renderUserMenu()}
                     <label className="pull-right advanced-label text-warning">
                         Advanced <span className="hidden-xs">Mode </span> <input
                             type="checkbox"
@@ -287,8 +303,8 @@ export default class Header extends React.Component
                             </a>
                         </li>
                         {
-                            (this.props.settings.hideTagSelector ||
-                            this.props.query.params._id) ?
+                            (props.settings.hideTagSelector ||
+                            props.query.params._id) ?
                             null :
                             <li className={ !_advanced && _tab == "tags" ? "active" : null }>
                                 <a href="" onClick={ e => {e.preventDefault(); setHashParam("_tab", "tags")}}>
@@ -306,24 +322,24 @@ export default class Header extends React.Component
                 </div>
                 <div className="tab-content">
                     <div className={ "tab-pane " + (_advanced ? "active" : "") }>
-                        { this.renderAdvancedTabContents() }
+                        { renderAdvancedTabContents() }
                     </div>
                     <div className={ "tab-pane " + (!_advanced && _tab == "demographics" ? "active" : "") }>
-                        { this.renderDemographicsTabContents() }
+                        { renderDemographicsTabContents() }
                     </div>
                     <div className={ "tab-pane " + (!_advanced && _tab == "conditions" ? "active" : "") }>
-                        { this.renderConditionsTabContents() }
+                        { renderConditionsTabContents() }
                     </div>
                     {
-                        (this.props.settings.hideTagSelector ||
-                            this.props.query.params._id) ?
+                        (props.settings.hideTagSelector ||
+                            props.query.params._id) ?
                         null :
                         <div className={ "tab-pane " + (!_advanced && _tab == "tags" ? "active" : "") }>
-                            { this.renderTagsTabContents() }
+                            { renderTagsTabContents() }
                         </div>
                     }
                     {
-                        !_advanced && this.props.settings.submitStrategy == "manual" ?
+                        !_advanced && props.settings.submitStrategy == "manual" ?
                         <div className="text-right" style={{ height: 0 }}>
                             <button
                                 type="button"
@@ -340,7 +356,7 @@ export default class Header extends React.Component
                     _advanced ?
                     null :
                     <SortWidget
-                        sort={ this.props.query.sort }
+                        sort={ props.query.sort }
                         onChange={ sort => {
                             store.dispatch(setSort(sort))
                             store.dispatch(fetch())
@@ -349,5 +365,15 @@ export default class Header extends React.Component
                 }
             </div>
         )
-    }
+    
 }
+
+Header.propTypes = {
+    settings : PropTypes.object.isRequired,
+    query    : PropTypes.object.isRequired,
+    location : PropTypes.object.isRequired,
+    urlParams: PropTypes.object.isRequired,
+    user: PropTypes.object.isRequired
+};
+
+export default Header

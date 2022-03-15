@@ -12,3 +12,9 @@ selenium-debug.log
 src/.DS_Store
 .idea/*.*
 build/config/default.json5
+.DS_Store
+build/.DS_Store
+.vscode
+build/commons.*
+build/js/
+build/report.html

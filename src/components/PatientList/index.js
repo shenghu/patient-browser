@@ -1,58 +1,30 @@
-import React                from "react"
+import React               from "react"
+import { useDispatch, useSelector } from 'react-redux';
 import PropTypes            from "prop-types"
 import PatientListItem      from "../PatientListItem"
 import { toggle, setAll }   from "../../redux/selection"
 import { showSelectedOnly } from "../../redux/settings"
 import { setParam, fetch }  from "../../redux/query"
 import store                from "../../redux"
-import { connect }          from "react-redux"
 import Footer               from "../Footer"
 import Header               from "../Header"
 import ErrorMessage         from "../ErrorMessage"
 import Alert                from "../Alert"
 import                           "./PatientList.less"
+import keycloak from "../../keycloak";
 
 
-export class PatientList extends React.Component
+export  const PatientList = (props)=>
 {
-    static propTypes = {
-        query    : PropTypes.object,
-        selection: PropTypes.object,
-        location : PropTypes.object,
-        settings : PropTypes.object,
-        urlParams: PropTypes.object,
-        dispatch : PropTypes.func
-    };
+    const state = useSelector((store) => store);
+    const dispatch = useDispatch();
 
-    render() {
-        return (
-            <div className="page">
-                <Header
-                    query={this.props.query}
-                    settings={this.props.settings}
-                    location={this.props.location}
-                    urlParams={this.props.urlParams}
-                />
-                <div className="patient-search-results">
-                    { this.renderContents() }
-                </div>
-                <Footer
-                    query={ this.props.query }
-                    bundle={ this.props.query.bundle }
-                    dispatch={ this.props.dispatch }
-                    selection={ this.props.selection }
-                    canShowSelected
-                />
-            </div>
-        )
-    }
-
-    renderContents() {
-        if (this.props.query.error) {
-            return <ErrorMessage error={this.props.query.error}/>
+    const renderContents = () => {
+        if (state.query.error) {
+            return <ErrorMessage error={state.query.error}/>
         }
 
-        if (!this.props.query.bundle || this.props.query.loading) {
+        if (!state.query.bundle || state.query.loading) {
             return (
                 <div className="patient-search-loading">
                     <i className="fa fa-spinner spin" /> Loading. Please wait...
@@ -60,7 +32,7 @@ export class PatientList extends React.Component
             )
         }
 
-        if (!this.props.query.bundle.entry || !this.props.query.bundle.entry.length) {
+        if (!state.query.bundle.entry || !state.query.bundle.entry.length) {
             return (
                 <Alert>
                     No patients found to match this search criteria
@@ -68,20 +40,19 @@ export class PatientList extends React.Component
             )
         }
 
-        return this.renderPatientItems()
-    }
+        return renderPatientItems()
+    };
 
-    renderPatientItems() {
-
+    const renderPatientItems = () => {
         const isSelected = (item) => {
             let idLower = (item.resource.id || "").toLowerCase();
-            let key = Object.keys(this.props.selection).find(k => k.toLowerCase() == idLower);
-            return key && this.props.selection[key] !== false;
+            let key = Object.keys(state.selection).find(k => k.toLowerCase() == idLower);
+            return key && state.selection[key] !== false;
         }
 
-        let offset = this.props.query.offset || (this.props.query.page !== null ? (this.props.query.page - 1) * this.props.query.limit : null) || 0;
-        let items = this.props.query.bundle.entry || [];
-        if (this.props.settings.renderSelectedOnly) {
+        let offset = state.query.offset || (state.query.page !== null ? (state.query.page - 1) * state.query.limit : null) || 0;
+        let items = state.query.bundle.entry || [];
+        if (state.settings.renderSelectedOnly) {
             items = items.filter(isSelected);
         }
         return items.map((o, i) => (
@@ -92,8 +63,8 @@ export class PatientList extends React.Component
                 index={ offset + i }
                 selected={ isSelected(o) }
                 onSelectionChange={ patient => {
-                    if (this.props.settings.renderSelectedOnly &&
-                        Object.keys(this.props.selection).filter(k => !!this.props.selection[k]).length === 1)
+                    if (state.settings.renderSelectedOnly &&
+                        Object.keys(state.selection).filter(k => !!state.selection[k]).length === 1)
                     {
                         store.dispatch(setAll({}))
                         store.dispatch(showSelectedOnly(false))
@@ -104,11 +75,41 @@ export class PatientList extends React.Component
                         store.dispatch(toggle(patient))
                     }
                 }}
-                query={ this.props.query }
-                settings={ this.props.settings }
+                query={ state.query }
+                settings={ state.settings }
             />
         ))
-    }
+    };
+
+    return (
+            <div className="page">
+                <Header
+                    query={state.query}
+                    settings={state.settings}
+                    location={props.location}
+                    urlParams={state.urlParams}
+                    user={state.user}
+                />
+                {keycloak.authenticated? <div className="patient-search-results">
+                    { renderContents() }
+                </div> :               <Alert>
+                    Please login first
+                </Alert>
+                }
+        
+                <Footer
+                    query={ state.query }
+                    bundle={ state.query.bundle }
+                    dispatch={ dispatch }
+                    selection={ state.selection }
+                    canShowSelected
+                />
+            </div>
+    );
 }
 
-export default connect(state => state)(PatientList);
+PatientList.propTypes = {
+    location : PropTypes.object
+}
+
+export default PatientList

@@ -63,10 +63,12 @@ export const setLimit       = createAction(SET_LIMIT)
 
 
 export const fetch = function() {
+    
     return (dispatch, getState) => {
         dispatch(setLoading(true))
         dispatch(setError(null))
         const { settings } = getState()
+        
         queryBuilder.fetch(settings.server).then(
             bundle => {
                 dispatch(setData(bundle))
