@@ -12,9 +12,14 @@ image:
 # The user should pass in the URL of their FHIR Server, the UI won't work with this default FHIR server URL
 fhirServer: https://alvearie-fhir.apps.fhir-demo.cp.fyre.ibm.com/fhir-server/api/v4/
 
+keycloak:
+  authServerUrl: https://alvearie-keycloak.apps.fhir-demo.cp.fyre.ibm.com/auth/
+  realm: test
+  clientId: patient-browser
+
 service:
   type: ClusterIP
-  httpPort: 80
+  httpPort: 8080
 
 enabled: true
 
