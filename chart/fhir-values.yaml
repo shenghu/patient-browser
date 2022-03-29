@@ -5,9 +5,9 @@
 replicaCount: 1
 
 image:
-  repository: alvearie/patient-browser
+  repository: shenghu/patient-browser
   pullPolicy: Always
-  tag: 0.0.3
+  tag: 0.1.17
 
 # The user should pass in the URL of their FHIR Server, the UI won't work with this default FHIR server URL
 fhirServer: https://alvearie-fhir.apps.fhir-demo.cp.fyre.ibm.com/fhir-server/api/v4/
@@ -24,7 +24,7 @@ service:
 enabled: true
 
 ingress:
-  enabled: true
+  enabled: false
   class: openshift-default
   hostname: &hostnameFhirUI alvearie-fhir-ui.apps.fhir-demo.cp.fyre.ibm.com
   annotations: {
